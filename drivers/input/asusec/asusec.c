@@ -611,18 +611,18 @@ static int asusec_chip_init(struct i2c_client *client)
 	}
 
 	//if (ASUSGetProjectID()==101){
-	if (1) {
-		msleep(750);
-		asusec_clear_i2c_buffer(client);
-		asusec_touchpad_disable(client);
-	}
+	//if (1) {
+	//	msleep(750);
+	//	asusec_clear_i2c_buffer(client);
+	//	asusec_touchpad_disable(client);
+	//}
 
 	asusec_keypad_disable(client);
 	
 #if TOUCHPAD_ELAN
 #if TOUCHPAD_MODE
-	//if (ASUSGetProjectID()==101){
-	if (1) {
+#if 0
+	if (ASUSGetProjectID()==101){
 		asusec_clear_i2c_buffer(client);
 		if ((!elantech_detect(ec_chip)) && (!elantech_init(ec_chip))){
 		    ec_chip->touchpad_member = ELANTOUCHPAD;
@@ -630,6 +630,7 @@ static int asusec_chip_init(struct i2c_client *client)
 			ec_chip->touchpad_member = -1;
 		}
 	}
+#endif
 #endif
 #endif
 
@@ -642,14 +643,15 @@ static int asusec_chip_init(struct i2c_client *client)
 	enable_irq(client->irq);
 	ec_chip->init_success = 1;
 
+#if 0
 	if (/*(ASUSGetProjectID()==101) &&*/ ec_chip->tp_enable){
 		asusec_touchpad_enable(client);
 	}
-#if 0
-	if ((ASUSGetProjectID()==102) && !gpio_get_value(TEGRA_GPIO_PS4)){
+
+#endif
+	if (/*(ASUSGetProjectID()==102) &&*/ !gpio_get_value(TEGRA_GPIO_PS4)){
 		asusec_close_keyboard();
 	}
-#endif
 
 	ec_chip->status = 1;
 	wake_unlock(&ec_chip->wake_lock);
@@ -1323,6 +1325,7 @@ static void asusec_dock_init_work_function(struct work_struct *dat)
 
 	wake_lock(&ec_chip->wake_lock_init);
 	//if (ASUSGetProjectID()==101){
+#if 0
 	if (1) {
 		ASUSEC_NOTICE("EP101 dock-init\n");
 		if (ec_chip->dock_det){
@@ -1377,8 +1380,11 @@ static void asusec_dock_init_work_function(struct work_struct *dat)
 		switch_set_state(&ec_chip->dock_sdev, ec_chip->dock_in ? 10 : 0);
 		mutex_unlock(&ec_chip->input_lock);
 	}
-#if 0
-	else if (ASUSGetProjectID()==102){
+	
+#endif
+
+	//else if (ASUSGetProjectID()==102){
+	if(1){
 		ASUSEC_NOTICE("EP102 dock-init\n");
 		ec_chip->dock_in = 1;
 		if (gpio_get_value(TEGRA_GPIO_PS4) || (!ec_chip->status)){
@@ -1392,7 +1398,6 @@ static void asusec_dock_init_work_function(struct work_struct *dat)
 			ASUSEC_NOTICE("Keyboard is closed\n");
 		}
 	}
-#endif
 	wake_unlock(&ec_chip->wake_lock_init);
 }
 
@@ -1421,9 +1426,9 @@ static void asusec_work_function(struct work_struct *dat)
 		if (gpio_get_value(TEGRA_GPIO_PS4)){
 			ec_chip->wakeup_lcd = 0;
 			//if (ASUSGetProjectID()==101){
-				ec_chip->dock_in = gpio_get_value(TEGRA_GPIO_PX5) ? 0 : 1;
+			//	ec_chip->dock_in = gpio_get_value(TEGRA_GPIO_PX5) ? 0 : 1;
 			//} else if (ASUSGetProjectID()==102){
-			//	ec_chip->dock_in = 1;
+				ec_chip->dock_in = 1;
 			//}
 			wake_lock_timeout(&ec_chip->wake_lock, 3*HZ);
 			msleep(500);
@@ -1606,11 +1611,12 @@ static int __devinit asusec_probe(struct i2c_client *client,
 	}
 	switch_set_state(&ec_chip->dock_sdev, 0);
 
-	err = power_supply_register(&client->dev, &asusec_power_supply[0]);
+/*	err = power_supply_register(&client->dev, &asusec_power_supply[0]);
 	if (err){
 		ASUSEC_ERR("fail to register power supply for dock\n");
 		goto exit;
 	}
+*/
 	
 	asusec_wq = create_singlethread_workqueue("asusec_wq");
 	INIT_DELAYED_WORK_DEFERRABLE(&ec_chip->asusec_work, asusec_work_function);
@@ -1846,16 +1852,16 @@ static int asusec_resume(struct i2c_client *client){
 	printk("asusec_resume+\n");
 
 	ec_chip->suspend_state = 0;
+#if 0
 	//if (ASUSGetProjectID()==101){
 		asusec_dock_info_update();
 		asusec_dock_status_check();
-#if 0
-	} else if (ASUSGetProjectID()==102){
+#endif
+	//} else if (ASUSGetProjectID()==102){
 		ec_chip->init_success = 0;
 		wake_lock(&ec_chip->wake_lock_init);
 		queue_delayed_work(asusec_wq, &ec_chip->asusec_dock_init_work, 0);
-	}
-#endif
+	//}
 
 	printk("asusec_resume-\n");
 	return 0;	
@@ -1887,9 +1893,9 @@ static ssize_t asusec_switch_name(struct switch_dev *sdev, char *buf)
 static ssize_t asusec_switch_state(struct switch_dev *sdev, char *buf)
 {
 	//if (ASUSGetProjectID() == 101) {
-		return sprintf(buf, "%s\n", (ec_chip->dock_in && ec_chip->init_success ? "10" : "0"));
+	//	return sprintf(buf, "%s\n", (ec_chip->dock_in && ec_chip->init_success ? "10" : "0"));
 	//} else {
-	//	return sprintf(buf, "%s\n", "0");
+		return sprintf(buf, "%s\n", "0");
 	//}
 }
 
